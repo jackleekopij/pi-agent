@@ -1,0 +1,33 @@
+{
+  "name": "pi-web-chat",
+  "version": "1.0.0",
+  "description": "Browser chat interface for pi-agent core via the Pi SDK",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "pi",
+    "chat",
+    "agent"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.79.3",
+    "@mcp-ui/client": "^7.1.1",
+    "express": "^5.2.1",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.3",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pi Web Chat</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand-strip"></div>
+      <div class="side-section">
+        <h2>Conversation</h2>
+        <div id="historyList" class="history-list"></div>
+      </div>
+      <div class="side-section activity-section">
+        <h2>Activity stream</h2>
+        <div id="activity" class="activity"></div>
+      </div>
+    </aside>
+
+    <div class="app">
+      <header>
+        <div>
+          <h1>π Web Chat</h1>
+          <p id="meta">Connecting…</p>
+        </div>
+        <div class="actions">
+          <button id="newSession" title="Start a fresh in-memory session">New</button>
+          <button id="abort" title="Abort current run">Abort</button>
+        </div>
+      </header>
+
+      <main id="messages" aria-live="polite"></main>
+
+      <section id="tools" class="tools hidden"></section>
+
+      <form id="composer">
+        <textarea id="input" rows="3" placeholder="Ask Pi anything… Shift+Enter for newline"></textarea>
+        <button id="send" type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+src/widget.generated.ts
+.env
+*.log
+.DS_Store

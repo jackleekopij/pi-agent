@@ -1,0 +1,33 @@
+{
+  "name": "pi-mcp-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP UI server that wraps the pi coding agent in an interactive chat GUI (mcp-ui + MCP Apps tracks)",
+  "type": "module",
+  "bin": {
+    "pi-mcp-ui": "dist/server.js"
+  },
+  "scripts": {
+    "build:widget": "node scripts/build-widget.mjs",
+    "build:server": "tsc -p tsconfig.json",
+    "build:dev": "esbuild src/dev/dev-entry.ts --bundle --format=esm --outfile=dist/dev/dev-entry.js",
+    "build": "npm run build:widget && npm run build:server && npm run build:dev",
+    "dev": "npm run build:widget && npm run build:dev && tsx src/dev/dev-server.ts",
+    "inspect": "npm run build && npx @modelcontextprotocol/inspector node dist/server.js",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.79.3",
+    "@mcp-ui/server": "^6.1.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@mcp-ui/client": "^7.1.1",
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

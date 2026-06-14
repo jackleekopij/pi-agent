@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pi-mcp-ui · dev preview</title>
+    <style>
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+      body { display: flex; flex-direction: column; background: #0b0b0d; color: #e8e8ea; }
+      header { padding: 8px 14px; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; gap: 12px; }
+      header b { font-size: 13px; }
+      #dev-status { font-size: 12px; color: #9a9aa0; margin-left: auto; }
+      main { flex: 1; display: flex; justify-content: center; padding: 18px; overflow: auto; }
+      #frame {
+        width: 440px; max-width: 100%; height: 600px;
+        background: #fff; border-radius: 14px; overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      }
+      #frame .placeholder { color: #888; font-size: 13px; padding: 24px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <b>pi-mcp-ui</b>
+      <span>dev preview — MCP Apps host (AppBridge over StreamableHTTP)</span>
+      <span id="dev-status">starting…</span>
+    </header>
+    <main>
+      <div id="frame"><div class="placeholder">loading widget…</div></div>
+    </main>
+    <script type="module" src="/dev-entry.js"></script>
+  </body>
+</html>

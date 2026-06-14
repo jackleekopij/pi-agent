@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pi</title>
+    <style>/*__STYLE__*/</style>
+  </head>
+  <body>
+    <div id="pi-app">
+      <header id="bar">
+        <span id="brand">pi</span>
+        <select id="model" title="Model"></select>
+        <span id="status" data-state="idle">ready</span>
+      </header>
+      <main id="messages"></main>
+      <footer id="composer">
+        <textarea id="input" rows="2" placeholder="Message pi…  (Enter to send, Shift+Enter for newline)"></textarea>
+        <div id="composer-actions">
+          <button id="stop" hidden>Stop</button>
+          <button id="send">Send</button>
+        </div>
+      </footer>
+    </div>
+    <script type="module">/*__SCRIPT__*/</script>
+  </body>
+</html>
