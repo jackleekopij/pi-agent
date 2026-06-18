@@ -121,6 +121,11 @@ bridge would collide with the widget's own ext-apps bridge).
 | `pi_history`   | All messages (initial render).                               |
 | `pi_models`    | Available models (model picker).                             |
 | `pi_set_model` | Switch provider/model.                                        |
+| `viz_visualize`  | Render given data as the best-fitting visual; returns a `ui://viz/*` resource. |
+| `viz_render_*`   | Render a specific component (bar/line/pie/kpi/table/network/sequence/image/markdown). P&ID/PID requests should use `viz_render_network`. |
+| `viz_render_pid` | Render a P&ID / piping-and-instrumentation file as a network graph. |
+
+The `viz_*` tools are backed by the shared [`@pi-harness/viz`](../packages/viz) library (same renderers as the web app) and return self-contained HTML as an mcp-ui resource, so any mcp-ui-aware host renders them identically.
 
 ## Verify
 

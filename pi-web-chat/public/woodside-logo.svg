@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-labelledby="title desc">
+  <title id="title">Woodside Energy Australia</title>
+  <desc id="desc">Woodside Energy Australia wordmark-style logo for the local chat UI.</desc>
+  <rect width="520" height="120" fill="none"/>
+  <g transform="translate(18 18)">
+    <circle cx="42" cy="42" r="38" fill="#D71638"/>
+    <path d="M22 29h12l8 27 9-27h10l9 27 8-27h12L75 68H63l-8-25-8 25H35L22 29z" fill="#fff"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#4D4D4F">
+    <text x="118" y="54" font-size="34" font-weight="700" letter-spacing="1.2">WOODSIDE</text>
+    <text x="120" y="84" font-size="20" font-weight="600" letter-spacing="3.2" fill="#D71638">ENERGY AUSTRALIA</text>
+  </g>
+</svg>

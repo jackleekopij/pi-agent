@@ -8,7 +8,9 @@
     "dev": "tsx src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "viz:smoke": "tsx scripts/viz-smoke.ts",
+    "assess:smoke": "tsx scripts/assessment-smoke.ts"
   },
   "keywords": [
     "pi",
@@ -20,7 +22,10 @@
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.79.3",
     "@mcp-ui/client": "^7.1.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@pi-harness/viz": "*",
     "express": "^5.2.1",
+    "typebox": "1.1.38",
     "ws": "^8.21.0"
   },
   "devDependencies": {

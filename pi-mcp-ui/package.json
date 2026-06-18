@@ -21,6 +21,7 @@
     "@earendil-works/pi-coding-agent": "^0.79.3",
     "@mcp-ui/server": "^6.1.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@pi-harness/viz": "*",
     "zod": "^3.25.0"
   },
   "devDependencies": {

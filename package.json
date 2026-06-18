@@ -1,0 +1,12 @@
+{
+  "name": "pi-harness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Workspace root: pi-agent UIs + shared viz library",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "pi-web-chat",
+    "pi-mcp-ui"
+  ]
+}

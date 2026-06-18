@@ -4,42 +4,111 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pi Web Chat</title>
+  <script>
+    // Apply the saved/system theme before first paint (no flash of light).
+    (function () {
+      try {
+        var t = localStorage.getItem("pi-web-chat-theme") ||
+          (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/pro-ui-overrides.css" />
 </head>
 <body>
   <div class="shell">
     <aside class="sidebar">
+      <div id="leftResize" class="resize-handle left-resize" title="Drag to resize left panel"></div>
       <div class="brand-strip"></div>
+      <div class="side-brand">
+        <img src="/pi-logo.svg" alt="Pi logo" class="pi-logo" />
+      </div>
       <div class="side-section">
-        <h2>Conversation</h2>
+        <h2>Conversations</h2>
         <div id="historyList" class="history-list"></div>
       </div>
       <div class="side-section activity-section">
         <h2>Activity stream</h2>
         <div id="activity" class="activity"></div>
       </div>
+      <div class="side-section workspace">
+        <div class="workspace-controls">
+          <p id="meta">Connecting…</p>
+          <div class="actions compact-actions">
+            <button id="theme" class="icon-btn" title="Toggle light / dark" aria-label="Toggle theme">🌙</button>
+            <button id="newSession" title="Start a new conversation">New</button>
+            <button id="abort" title="Abort current run">Abort</button>
+          </div>
+        </div>
+        <details class="settings-box">
+          <summary>Workspace settings</summary>
+          <label class="ws-label" for="cwdInput">Workspace folders</label>
+          <div id="folderList" class="folder-list"></div>
+          <div class="ws-row">
+            <input id="cwdInput" type="text" spellcheck="false" placeholder="/path/to/project" />
+            <button id="cwdSet" title="Add/switch to this folder">Add</button>
+          </div>
+          <label class="ws-label" for="fileInput">Read workspace file</label>
+          <div class="ws-row">
+            <input id="fileInput" type="text" spellcheck="false" placeholder="relative/path.ts" />
+            <button id="fileRead" title="Read a file from the working directory and attach it">Read</button>
+          </div>
+        </details>
+      </div>
     </aside>
 
     <div class="app">
-      <header>
-        <div>
-          <h1>π Web Chat</h1>
-          <p id="meta">Connecting…</p>
-        </div>
-        <div class="actions">
-          <button id="newSession" title="Start a fresh in-memory session">New</button>
-          <button id="abort" title="Abort current run">Abort</button>
-        </div>
-      </header>
+      <div class="messages-wrap">
+        <main id="messages" aria-live="polite" tabindex="0"></main>
+        <button id="scrollBottom" class="scroll-bottom hidden" type="button" aria-label="Scroll to latest messages">
+          <span class="scroll-bottom-count hidden"></span>
+          <span>↓ Latest</span>
+        </button>
+      </div>
 
-      <main id="messages" aria-live="polite"></main>
+      <aside id="inspector" class="code-inspector" aria-label="Process AI Harness inspector">
+        <div class="inspector-head">
+          <div>
+            <span class="eyebrow">Process AI Harness</span>
+            <strong>Runtime timeline</strong>
+          </div>
+          <select id="approvalMode" title="Shell command approval mode">
+            <option value="smart">Smart approvals</option>
+            <option value="always">Always ask</option>
+            <option value="risky">Ask risky only</option>
+            <option value="readonly">Read-only auto-run</option>
+            <option value="auto">Auto-run</option>
+          </select>
+        </div>
+        <div class="inspector-tabs" role="tablist" aria-label="Inspector sections">
+          <button type="button" class="active" data-inspector-tab="prompts">Prompts</button>
+          <button type="button" data-inspector-tab="timeline">Timeline</button>
+          <button type="button" data-inspector-tab="artifacts">MCP UI</button>
+        </div>
+        <section id="promptTurns" class="tools inspector-panel prompt-turns" data-panel="prompts"></section>
+        <section id="tools" class="tools inspector-panel" data-panel="timeline"></section>
+        <section id="artifacts" class="tools inspector-panel" data-panel="artifacts"></section>
+        <div id="rightResize" class="resize-handle right-resize" title="Drag to resize right panel"></div>
+      </aside>
 
-      <section id="tools" class="tools hidden"></section>
+      <div id="inputModalMount"></div>
+
+      <div id="attachments" class="attachments hidden"></div>
 
       <form id="composer">
+        <button id="attachBtn" type="button" title="Attach files (or drag &amp; drop)" aria-label="Attach files">📎</button>
         <textarea id="input" rows="3" placeholder="Ask Pi anything… Shift+Enter for newline"></textarea>
         <button id="send" type="submit">Send</button>
+        <input id="fileUpload" type="file" multiple hidden />
       </form>
+
+      <div id="dropzone" class="dropzone hidden" aria-hidden="true">
+        <div class="dropzone-inner">⬆ Drop files to attach</div>
+      </div>
     </div>
   </div>
   <script src="/app.js"></script>

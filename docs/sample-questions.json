@@ -1,0 +1,35 @@
+{
+  "title": "Sample question bank — drive a reproducible quiz with ask_question",
+  "questions": [
+    {
+      "id": "q-revit-collector",
+      "type": "multiple_choice",
+      "question": "Which Revit API class is used to iterate over elements in a document?",
+      "choices": ["Transaction", "FilteredElementCollector", "ElementId", "UIApplication"],
+      "correct": "B",
+      "points": 1
+    },
+    {
+      "id": "q-revit-transaction",
+      "type": "multiple_choice",
+      "question": "What must wrap any change to the Revit model?",
+      "choices": ["A Transaction", "A FilteredElementCollector", "A Selection", "Nothing"],
+      "correct": "A",
+      "points": 1
+    },
+    {
+      "id": "q-transaction-explain",
+      "type": "short_answer",
+      "question": "In one sentence, what does a Revit Transaction do?",
+      "expected": "Groups one or more model changes so they are committed or rolled back atomically; required for any modification.",
+      "points": 2
+    },
+    {
+      "id": "q-units",
+      "type": "short_answer",
+      "question": "What internal length unit does the Revit API use?",
+      "expected": "Decimal feet (imperial feet) regardless of the document's display units.",
+      "points": 1
+    }
+  ]
+}

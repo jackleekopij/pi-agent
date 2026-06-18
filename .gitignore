@@ -6,3 +6,8 @@ dist/
 !.env.example
 .DS_Store
 *.tsbuildinfo
+
+# Runtime/generated local app data
+.pi-web-chat-debug/
+.pi-web-chat-assessment/
+.pi-web-chat-uploads/

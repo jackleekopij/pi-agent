@@ -15,6 +15,7 @@ import { realpathSync } from "node:fs";
 import { PiBridge, type PiBridgeOptions } from "./pi-bridge.js";
 import { registerPiTools } from "./tools.js";
 import { registerChatUI, type UiTrack } from "./ui.js";
+import { registerVizTools } from "./viz.js";
 
 export interface CreateServerOptions extends PiBridgeOptions {
   track?: UiTrack;
@@ -29,6 +30,7 @@ export function buildServer(bridge: PiBridge, track: UiTrack = "apps"): McpServe
   );
   registerPiTools(server, bridge);
   registerChatUI(server, track);
+  registerVizTools(server);
   return server;
 }
 
