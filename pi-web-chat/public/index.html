@@ -36,26 +36,53 @@
         <div id="activity" class="activity"></div>
       </div>
       <div class="side-section learning-section">
-        <h2>Optimal learning</h2>
+        <div class="section-title-row">
+          <h2>Optimal learning</h2>
+          <span id="learningStatus" class="learning-status">Ready</span>
+        </div>
         <div class="learning-box">
-          <label class="ws-label" for="learningMode">Mode</label>
-          <select id="learningMode">
+          <select id="learningMode" hidden>
             <option value="study">Study mode</option>
             <option value="test">Test mode</option>
           </select>
-          <label class="ws-label" for="learningTopic">Topic</label>
+          <div class="learning-segment" role="tablist" aria-label="Learning mode">
+            <button type="button" class="active" data-learning-mode="study">Study</button>
+            <button type="button" data-learning-mode="test">Test</button>
+          </div>
+
+          <label class="ws-label" for="learningTopic">Topic / exam / source</label>
           <input id="learningTopic" type="text" placeholder="e.g. CQL, P&ID symbols" />
-          <label class="ws-label" for="learningDepth">Operating depth</label>
-          <select id="learningDepth">
+
+          <label class="ws-label" for="learningDepth">How deep?</label>
+          <select id="learningDepth" hidden>
             <option value="Strategic + Tactical">Strategic + Tactical</option>
             <option value="Strategic">Strategic</option>
             <option value="Technical">Technical / all levels</option>
           </select>
-          <label class="ws-label" for="learningVault">Obsidian vault / notes folder</label>
-          <input id="learningVault" type="text" placeholder="defaults to workspace folder" />
+          <div class="depth-picker" role="radiogroup" aria-label="Operating depth">
+            <button type="button" data-depth="Strategic"><strong>Strategic</strong><span>decide & trade off</span></button>
+            <button type="button" class="active" data-depth="Strategic + Tactical"><strong>Tactical</strong><span>configure & validate</span></button>
+            <button type="button" data-depth="Technical"><strong>Technical</strong><span>derive & implement</span></button>
+          </div>
+
+          <label class="ws-label" for="learningVault">Vault / notes folder</label>
+          <div class="learning-vault-row">
+            <input id="learningVault" type="text" placeholder="defaults to workspace folder" />
+            <button id="useWorkspaceVault" type="button">Use workspace</button>
+          </div>
+
+          <div class="learning-flow" aria-label="Optimal learning workflow">
+            <div class="flow-step active"><b>1</b><span>Calibrate</span></div>
+            <div class="flow-step"><b>2</b><span>Pre-test</span></div>
+            <div class="flow-step"><b>3</b><span>Study notes</span></div>
+            <div class="flow-step"><b>4</b><span>Retrieve</span></div>
+          </div>
+
+          <div id="learningHint" class="learning-hint">Start with a pre-test. Wrong guesses are useful: they create prediction error that improves encoding.</div>
+
           <div class="learning-actions">
-            <button id="startLearning" type="button">Start</button>
-            <button id="pretestLearning" type="button">Pre-test</button>
+            <button id="startLearning" type="button">Start workflow</button>
+            <button id="pretestLearning" type="button">Generate pre-test</button>
           </div>
         </div>
       </div>

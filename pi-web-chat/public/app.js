@@ -16,6 +16,9 @@ const learningDepth = document.getElementById("learningDepth");
 const learningVault = document.getElementById("learningVault");
 const startLearningBtn = document.getElementById("startLearning");
 const pretestLearningBtn = document.getElementById("pretestLearning");
+const useWorkspaceVaultBtn = document.getElementById("useWorkspaceVault");
+const learningStatus = document.getElementById("learningStatus");
+const learningHint = document.getElementById("learningHint");
 const sendButton = document.getElementById("send");
 const abortButton = document.getElementById("abort");
 const newSessionButton = document.getElementById("newSession");
@@ -1675,11 +1678,23 @@ function buildOptimalLearningPrompt(kind = "start") {
   return `Use the optimal-learning skill workflow.\n\nAction: ${action}\nMode: ${mode === "study" ? "Study Mode" : "Test Mode"}\nTopic: ${topic}\nOperating depth: ${depth}\nVault / notes folder: ${vault}\n\nFollow these rules:\n- Use Strategic / Tactical / Technical concept tagging.\n- If the operating depth is Strategic + Tactical, actively teach/test Strategic and Tactical; keep Technical reference-only unless essential.\n- For Study Mode: discover vault conventions, read related existing notes/trackers, then create a pre-test before giving feedback or study notes.\n- For Test Mode: read or create _knowledge-tracker/[topic]-tracker.md, run diagnostic retrieval practice, update gaps/mastery, and recommend next spacing.\n- Use ask_question for all user inputs, pre-test questions, diagnostic questions, confidence checks, and approvals so the UI modal captures answers.\n- When asking multiple pre-test questions, call ask_question multiple times in one turn; the UI will batch answers before feedback.\n- Do not give answer feedback until all pre-test answers have been submitted.\n- Save outputs into the vault where appropriate: study notes, pre-test, post-study quiz, NotebookLM prompts, and tracker files.\n\nBegin now. If required information is missing, ask concise questions using ask_question.`;
 }
 
+function syncLearningUi() {
+  const mode = learningMode?.value || "study";
+  const depth = learningDepth?.value || "Strategic + Tactical";
+  document.querySelectorAll("[data-learning-mode]").forEach((b) => b.classList.toggle("active", b.dataset.learningMode === mode));
+  document.querySelectorAll("[data-depth]").forEach((b) => b.classList.toggle("active", b.dataset.depth === depth));
+  if (learningStatus) learningStatus.textContent = mode === "study" ? "Study" : "Test";
+  if (learningHint) learningHint.textContent = mode === "study"
+    ? "Study mode: calibrate depth, pre-test first, then generate vault notes, podcast prompts and a post-study quiz."
+    : "Test mode: read the knowledge tracker, find your edge, update gaps, and schedule the next retrieval session.";
+}
+
 function restoreLearningPrefs() {
   if (learningTopic) learningTopic.value = localStorage.getItem("optimal-learning-topic") || "";
   if (learningDepth) learningDepth.value = localStorage.getItem("optimal-learning-depth") || learningDepth.value;
   if (learningVault) learningVault.value = localStorage.getItem("optimal-learning-vault") || "";
   if (learningMode) learningMode.value = localStorage.getItem("optimal-learning-mode") || learningMode.value;
+  syncLearningUi();
 }
 
 function openCommandPalette() {
@@ -1790,9 +1805,23 @@ renderWorkspaceFolders();
 fileReadBtn?.addEventListener("click", readFileIntoChat);
 fileInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); readFileIntoChat(); } });
 restoreLearningPrefs();
+document.querySelectorAll("[data-learning-mode]").forEach((btn) => btn.addEventListener("click", () => {
+  if (learningMode) learningMode.value = btn.dataset.learningMode;
+  buildOptimalLearningPrompt("prefs");
+  syncLearningUi();
+}));
+document.querySelectorAll("[data-depth]").forEach((btn) => btn.addEventListener("click", () => {
+  if (learningDepth) learningDepth.value = btn.dataset.depth;
+  buildOptimalLearningPrompt("prefs");
+  syncLearningUi();
+}));
+useWorkspaceVaultBtn?.addEventListener("click", () => {
+  if (learningVault) learningVault.value = cwdInput?.value || "";
+  buildOptimalLearningPrompt("prefs");
+});
 startLearningBtn?.addEventListener("click", () => submitSystemPrompt(buildOptimalLearningPrompt("start"), `Optimal Learning ${learningMode?.value || "study"} mode`));
 pretestLearningBtn?.addEventListener("click", () => submitSystemPrompt(buildOptimalLearningPrompt("pretest"), "Optimal Learning pre-test"));
-for (const el of [learningMode, learningDepth]) el?.addEventListener("change", () => buildOptimalLearningPrompt("prefs"));
+for (const el of [learningMode, learningDepth]) el?.addEventListener("change", () => { buildOptimalLearningPrompt("prefs"); syncLearningUi(); });
 for (const el of [learningTopic, learningVault]) el?.addEventListener("blur", () => buildOptimalLearningPrompt("prefs"));
 
 // Upload files from the computer (picker).

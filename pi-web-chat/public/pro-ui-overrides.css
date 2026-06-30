@@ -1117,3 +1117,116 @@ textarea {
   border-color: var(--danger);
   color: #fff;
 }
+
+/* Optimal Learning UX refinement */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.learning-status {
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border));
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 6%, var(--panel));
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.learning-box {
+  padding: 14px;
+  gap: 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger) 5%, var(--panel)), var(--panel-3));
+}
+.learning-segment,
+.depth-picker {
+  display: grid;
+  gap: 6px;
+}
+.learning-segment { grid-template-columns: 1fr 1fr; }
+.depth-picker { grid-template-columns: 1fr; }
+.learning-segment button,
+.depth-picker button {
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  box-shadow: none;
+}
+.learning-segment button {
+  min-height: 34px;
+  text-align: center;
+  font-weight: 900;
+}
+.depth-picker button {
+  display: grid;
+  gap: 2px;
+  padding: 9px 10px;
+}
+.depth-picker strong { color: var(--text); }
+.depth-picker span { color: var(--muted); font-size: 11px; font-weight: 650; }
+.learning-segment button.active,
+.depth-picker button.active {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
+  color: var(--danger);
+}
+.learning-vault-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+.learning-vault-row button {
+  border-radius: 0;
+  white-space: nowrap;
+  padding-inline: 10px;
+}
+.learning-flow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin-top: 2px;
+}
+.flow-step {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 7px 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+.flow-step b {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  background: var(--panel-2);
+  color: var(--muted);
+}
+.flow-step.active {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+  color: var(--danger);
+}
+.flow-step.active b { background: var(--danger); color: #fff; }
+.learning-hint {
+  border-left: 4px solid var(--danger);
+  background: var(--panel);
+  padding: 9px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.learning-actions {
+  grid-template-columns: 1.15fr .85fr;
+}
+.learning-actions button {
+  min-height: 38px;
+  font-size: 12px;
+}
