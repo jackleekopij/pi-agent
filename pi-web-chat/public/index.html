@@ -35,6 +35,30 @@
         <h2>Activity stream</h2>
         <div id="activity" class="activity"></div>
       </div>
+      <div class="side-section learning-section">
+        <h2>Optimal learning</h2>
+        <div class="learning-box">
+          <label class="ws-label" for="learningMode">Mode</label>
+          <select id="learningMode">
+            <option value="study">Study mode</option>
+            <option value="test">Test mode</option>
+          </select>
+          <label class="ws-label" for="learningTopic">Topic</label>
+          <input id="learningTopic" type="text" placeholder="e.g. CQL, P&ID symbols" />
+          <label class="ws-label" for="learningDepth">Operating depth</label>
+          <select id="learningDepth">
+            <option value="Strategic + Tactical">Strategic + Tactical</option>
+            <option value="Strategic">Strategic</option>
+            <option value="Technical">Technical / all levels</option>
+          </select>
+          <label class="ws-label" for="learningVault">Obsidian vault / notes folder</label>
+          <input id="learningVault" type="text" placeholder="defaults to workspace folder" />
+          <div class="learning-actions">
+            <button id="startLearning" type="button">Start</button>
+            <button id="pretestLearning" type="button">Pre-test</button>
+          </div>
+        </div>
+      </div>
       <div class="side-section workspace">
         <div class="workspace-controls">
           <p id="meta">Connecting…</p>
