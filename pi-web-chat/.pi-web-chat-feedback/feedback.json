@@ -1,0 +1,145 @@
+[
+  {
+    "feedbackId": "fb-ms83y9ts-8wxy2",
+    "targetType": "assistant",
+    "targetLabel": "P&ID summary — D-1201",
+    "rating": "down",
+    "correction": {
+      "original": "Inlet flow is approximately 0.45 t/h to V-120.",
+      "corrected": "Inlet flow is 450 kg/h to V-120 — state units exactly as drawn, never convert."
+    },
+    "excerpt": "Summary of drawing D-1201: inlet flow approximately 0.45 t/h…",
+    "skillId": "pid-summarizer",
+    "skillVersion": "6a9200f9",
+    "conversationId": "conv-d1201-review",
+    "turnIndex": 4,
+    "status": "addressed",
+    "createdAt": "2026-07-18T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9ts-u1ku1",
+    "targetType": "assistant",
+    "targetLabel": "P&ID summary — D-1201",
+    "rating": "down",
+    "comment": "Equipment list should be a table, and half the rows have no units at all.",
+    "excerpt": "Major equipment: V-120 separator, P-121A/B export pumps…",
+    "skillId": "pid-summarizer",
+    "skillVersion": "6a9200f9",
+    "conversationId": "conv-d1201-review",
+    "turnIndex": 6,
+    "status": "addressed",
+    "createdAt": "2026-07-18T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9tw-hvcad",
+    "targetType": "table",
+    "targetLabel": "Equipment table — D-1201",
+    "correction": {
+      "original": "PCV-101 | Control valve | Vessel protection",
+      "corrected": "PSV-101 | Pressure safety valve | V-120 overpressure protection — verify tag letter codes against ISA-5.1."
+    },
+    "excerpt": "Tag | Type | Service … PCV-101 | Control valve | Vessel protection",
+    "skillId": "pid-summarizer",
+    "skillVersion": "1c3c2a5e",
+    "conversationId": "conv-hazop-prep",
+    "turnIndex": 9,
+    "status": "addressed",
+    "createdAt": "2026-07-24T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u0-q7u36",
+    "targetType": "assistant",
+    "targetLabel": "P&ID summary — D-1201 rev B",
+    "rating": "up",
+    "excerpt": "Equipment table with exact drawing units…",
+    "skillId": "pid-summarizer",
+    "skillVersion": "1c3c2a5e",
+    "conversationId": "conv-d1201-revb",
+    "turnIndex": 3,
+    "status": "open",
+    "createdAt": "2026-07-22T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u0-4i39z",
+    "targetType": "viz",
+    "targetLabel": "Bar chart — production by well",
+    "rating": "down",
+    "comment": "X axis has no label and the units (bbl/d) are missing from the tooltip.",
+    "excerpt": "Production by well: W07 1200, W12 950…",
+    "skillId": "visualize",
+    "conversationId": "conv-prod-review",
+    "turnIndex": 5,
+    "status": "open",
+    "createdAt": "2026-07-27T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u0-wwig4",
+    "targetType": "viz",
+    "targetLabel": "Network graph — gathering system",
+    "rating": "up",
+    "excerpt": "Well 07 → Manifold A → Separator 2…",
+    "skillId": "visualize",
+    "conversationId": "conv-prod-review",
+    "turnIndex": 8,
+    "status": "open",
+    "createdAt": "2026-07-24T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u0-pyukz",
+    "targetType": "image",
+    "targetLabel": "Annotated P&ID crop",
+    "annotations": [
+      {
+        "x": 0.42,
+        "y": 0.31,
+        "w": 0.18,
+        "h": 0.22,
+        "note": "This is the test separator, not a KO drum — shell is horizontal."
+      }
+    ],
+    "excerpt": "(image) P&ID crop, upper-right quadrant",
+    "skillId": "pid-summarizer",
+    "skillVersion": "29c9ecef",
+    "conversationId": "conv-site-walk",
+    "turnIndex": 2,
+    "status": "open",
+    "createdAt": "2026-07-29T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u1-e9ek3",
+    "targetType": "assistant",
+    "targetLabel": "P&ID summary — D-1305",
+    "rating": "up",
+    "excerpt": "Verified tags twice; PSV-201 flagged for confirmation…",
+    "skillId": "pid-summarizer",
+    "skillVersion": "29c9ecef",
+    "conversationId": "conv-d1305",
+    "turnIndex": 4,
+    "status": "open",
+    "createdAt": "2026-07-29T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u1-dfv3s",
+    "targetType": "question",
+    "targetLabel": "Assessment — process fundamentals",
+    "comment": "Questions are too easy for the strategic depth setting — mix in trade-off questions.",
+    "excerpt": "Q: Which component separates gas from liquids?",
+    "skillId": "assessment",
+    "conversationId": "conv-onboarding",
+    "turnIndex": 11,
+    "status": "open",
+    "createdAt": "2026-07-25T12:51:22.830Z"
+  },
+  {
+    "feedbackId": "fb-ms83y9u1-vymzw",
+    "targetType": "assistant",
+    "targetLabel": "Study notes — CQL basics",
+    "rating": "up",
+    "excerpt": "Vault notes created: 12 cards, 3 diagrams…",
+    "skillId": "optimal-learning",
+    "conversationId": "conv-cql-study",
+    "turnIndex": 7,
+    "status": "open",
+    "createdAt": "2026-07-23T12:51:22.830Z"
+  }
+]

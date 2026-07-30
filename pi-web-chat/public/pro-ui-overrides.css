@@ -57,7 +57,7 @@ body {
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--panel) 92%, transparent);
   box-shadow: var(--shadow-sm);
-  grid-template-rows: 6px auto minmax(180px, 1fr) minmax(150px, .72fr) auto;
+  grid-template-rows: 6px auto auto minmax(0, 1fr);
   backdrop-filter: blur(14px);
 }
 
@@ -388,7 +388,7 @@ h1 {
 }
 
 #composer {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: end;
   padding: 10px;
 }
@@ -645,15 +645,12 @@ textarea {
 .scroll-bottom-count.hidden { display: none; }
 #messages::-webkit-scrollbar,
 .history-list::-webkit-scrollbar,
-.activity::-webkit-scrollbar,
 .tools::-webkit-scrollbar { width: 10px; height: 10px; }
 #messages::-webkit-scrollbar-track,
 .history-list::-webkit-scrollbar-track,
-.activity::-webkit-scrollbar-track,
 .tools::-webkit-scrollbar-track { background: transparent; }
 #messages::-webkit-scrollbar-thumb,
 .history-list::-webkit-scrollbar-thumb,
-.activity::-webkit-scrollbar-thumb,
 .tools::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--danger) 28%, var(--border));
   border: 3px solid transparent;
@@ -662,7 +659,6 @@ textarea {
 }
 #messages::-webkit-scrollbar-thumb:hover,
 .history-list::-webkit-scrollbar-thumb:hover,
-.activity::-webkit-scrollbar-thumb:hover,
 .tools::-webkit-scrollbar-thumb:hover {
   background: color-mix(in srgb, var(--danger) 55%, var(--border));
   border: 3px solid transparent;
@@ -721,6 +717,25 @@ textarea {
   padding: 8px 10px;
   font-size: 12px;
   font-weight: 750;
+}
+.composer-approval {
+  display: grid;
+  gap: 4px;
+  align-self: stretch;
+  min-width: 116px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+.composer-approval #approvalMode {
+  max-width: none;
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .inspector-tabs {
   display: grid;
@@ -1023,7 +1038,7 @@ textarea {
   font-size: 12px;
 }
 .code-inspector {
-  grid-template-rows: auto auto minmax(150px, .26fr) minmax(170px, .34fr) minmax(220px, .40fr) !important;
+  grid-template-rows: auto auto auto minmax(140px, .24fr) minmax(160px, .32fr) minmax(200px, .44fr) !important;
 }
 .inspector-tabs { grid-template-columns: repeat(3, 1fr) !important; }
 #promptTurns.inspector-panel::before { content: "Prompt turns"; }
@@ -1068,6 +1083,10 @@ textarea {
   .app { grid-template-columns: 1fr !important; }
   .resize-handle { display: none; }
 }
+@media (max-width: 720px) {
+  #composer { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .composer-approval { grid-column: 1 / -1; }
+}
 
 /* Pi logo restored */
 .pi-logo {
@@ -1079,9 +1098,23 @@ textarea {
 }
 
 /* Optimal Learning skill tooling */
-.learning-section {
+.learning-section,
+.right-learning-panel {
   min-height: 0;
   border-bottom: 1px solid var(--border);
+}
+.right-learning-panel {
+  padding: 12px;
+  overflow: auto;
+  background: color-mix(in srgb, var(--danger) 3%, transparent);
+}
+.right-learning-panel h2 {
+  margin: 0;
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
 }
 .learning-box {
   display: grid;

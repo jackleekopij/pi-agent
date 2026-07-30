@@ -12,9 +12,18 @@ import {
   ModelRegistry,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
+import crypto from "node:crypto";
 import { renderData, runVizTool } from "./viz-tools.js";
 import { buildMcpUiVizTools } from "./mcp-ui-tools.js";
-import { buildQuestionTools, saveAnswer, type AnswerRecord } from "./question-tools.js";
+import { buildQuestionTools, saveAnswer, registerQuestion, type AnswerRecord } from "./question-tools.js";
+import { listSkills, recordSkillLaunch, getSkillLaunches, listSkillVersions, getSkillVersionContent } from "./skills-tools.js";
+import { buildFeedbackTools, saveFeedback, feedbackSummary, feedbackAnalytics, resolveFeedback, listFeedback, isActionableOpen } from "./feedback-tools.js";
+import {
+  buildEvalTools, listEvalSets, listEvalRuns, getEvalSet, saveEvalSet, deleteEvalSet,
+  createEvalRun, recordEvalResult, runSummary, promptRunFraming, evalQuestionId, parseEvalQuestionId,
+  setBaselineRun, evalAnalytics,
+  type EvalQuestionCase, type EvalConfigSnapshot,
+} from "./eval-tools.js";
 
 type Attachment = {
   path: string;
@@ -25,7 +34,7 @@ type Attachment = {
 };
 
 type ClientMessage =
-  | { type: "prompt"; message: string; streamingBehavior?: "steer" | "followUp"; attachments?: Attachment[]; approvalPolicy?: string }
+  | { type: "prompt"; message: string; streamingBehavior?: "steer" | "followUp"; attachments?: Attachment[]; approvalPolicy?: string; systemPrompt?: string; hooksBefore?: string; hooksAfter?: string; skill?: { id: string; name?: string; version?: string } }
   | { type: "abort" }
   | { type: "new_session" }
   | { type: "get_state" }
@@ -34,7 +43,114 @@ type ClientMessage =
   | { type: "demo_viz"; data?: unknown; hint?: { kind?: string; title?: string } }
   | { type: "viz_tool"; name: string; params?: Record<string, unknown> }
   | { type: "answer"; questionId: string; value: string | string[]; text?: string }
-  | { type: "answer_batch"; answers: Array<{ questionId: string; value: string | string[]; text?: string }> };
+  | { type: "answer_batch"; answers: Array<{ questionId: string; value: string | string[]; text?: string }> }
+  | { type: "list_skills" }
+  | { type: "feedback"; record: Record<string, unknown> }
+  | { type: "eval_state" }
+  | { type: "eval_save_set"; set: { id?: string; name: string; description?: string; kind: string; cases: unknown[]; skillId?: string } }
+  | { type: "eval_delete_set"; setId: string }
+  | { type: "eval_run"; setId: string }
+  | { type: "eval_set_baseline"; runId: string }
+  | { type: "feedback_state" }
+  | { type: "feedback_resolve"; feedbackId: string; status?: "open" | "addressed" }
+  | { type: "skill_versions"; skillId: string }
+  | { type: "skill_version_content"; skillId: string; hash: string }
+  | { type: "get_config" }
+  | { type: "set_config"; config: { systemPrompt?: string; hooks?: unknown[] } };
+
+// --- per-workspace harness config (system prompt + hooks) --------------------
+// Stored under <cwd>/.pi-web-chat-config/config.json so it follows the project,
+// not the browser.
+type HarnessConfig = { systemPrompt?: string; hooks?: unknown[] };
+function harnessConfigFile(cwd: string): string {
+  const d = path.join(cwd, ".pi-web-chat-config");
+  try { fs.mkdirSync(d, { recursive: true }); } catch {}
+  return path.join(d, "config.json");
+}
+function readHarnessConfig(cwd: string): HarnessConfig {
+  try { return JSON.parse(fs.readFileSync(harnessConfigFile(cwd), "utf8")) as HarnessConfig; } catch { return {}; }
+}
+function writeHarnessConfig(cwd: string, patch: HarnessConfig): HarnessConfig {
+  const next: HarnessConfig = { ...readHarnessConfig(cwd) };
+  if ("systemPrompt" in patch) next.systemPrompt = String(patch.systemPrompt ?? "").slice(0, 16000);
+  if ("hooks" in patch) next.hooks = Array.isArray(patch.hooks) ? patch.hooks.slice(0, 50) : [];
+  fs.writeFileSync(harnessConfigFile(cwd), JSON.stringify(next, null, 2));
+  return next;
+}
+
+// --- skill health + run config snapshot --------------------------------------
+/** The harness config an eval run executes under, captured at run start so a
+ *  score change can't be silently confounded by a config change. */
+function configSnapshotFor(cwd: string, model?: string): EvalConfigSnapshot {
+  const config = readHarnessConfig(cwd);
+  const sys = (config.systemPrompt || "").trim();
+  const hooks = Array.isArray(config.hooks)
+    ? config.hooks.filter((h) => (h as Record<string, unknown>)?.enabled !== false).length
+    : 0;
+  return {
+    model,
+    systemPromptHash: sys ? crypto.createHash("sha1").update(sys, "utf8").digest("hex").slice(0, 8) : undefined,
+    systemPromptChars: sys.length || undefined,
+    hooks: hooks || undefined,
+  };
+}
+
+export interface SkillHealth {
+  launches: number;
+  lastLaunchedAt?: string;
+  feedback: { count: number; up: number; down: number; openCorrections: number; open: number };
+  latestEval?: { runId: string; setId: string; setName: string; avgScore?: number; delta?: number; skillVersion?: string; startedAt: string };
+}
+
+/** One glance per skill: usage, feedback ratio, latest bound-eval score with
+ *  delta vs the previous bound run. Pure read over the three stores. */
+function buildSkillHealth(cwd: string): Record<string, SkillHealth> {
+  const health: Record<string, SkillHealth> = {};
+  const entry = (skillId: string): SkillHealth =>
+    (health[skillId] ||= { launches: 0, feedback: { count: 0, up: 0, down: 0, openCorrections: 0, open: 0 } });
+
+  const launches = getSkillLaunches(cwd);
+  for (const [skillId, stats] of Object.entries(launches)) {
+    const h = entry(skillId);
+    h.launches = stats.count;
+    h.lastLaunchedAt = stats.lastAt;
+  }
+  for (const f of listFeedback(cwd)) {
+    if (!f.skillId) continue;
+    const h = entry(f.skillId).feedback;
+    h.count++;
+    if (f.rating === "up") h.up++;
+    if (f.rating === "down") h.down++;
+    if (isActionableOpen(f)) {
+      h.open++;
+      if (f.correction) h.openCorrections++;
+    }
+  }
+  // Latest complete bound run per skill, with delta vs the previous one.
+  const allRuns = listEvalRuns(cwd);
+  const bySkill = new Map<string, typeof allRuns>();
+  for (const run of allRuns) {
+    if (!run.skillId || run.status !== "complete") continue;
+    if (!bySkill.has(run.skillId)) bySkill.set(run.skillId, []);
+    bySkill.get(run.skillId)!.push(run);
+  }
+  for (const [skillId, runs] of bySkill) {
+    const latest = runSummary(runs[runs.length - 1]);
+    const previous = runs.length > 1 ? runSummary(runs[runs.length - 2]) : undefined;
+    entry(skillId).latestEval = {
+      runId: latest.runId,
+      setId: runs[runs.length - 1].setId,
+      setName: latest.setName,
+      avgScore: latest.avgScore,
+      delta: typeof latest.avgScore === "number" && typeof previous?.avgScore === "number"
+        ? latest.avgScore - previous.avgScore
+        : undefined,
+      skillVersion: latest.skillVersion,
+      startedAt: latest.startedAt,
+    };
+  }
+  return health;
+}
 
 const MAX_FILE_BYTES = 200 * 1024;
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
@@ -151,15 +267,23 @@ async function createSession(cwd: string, onMcpLog?: (level: LogLevel, message: 
   const authStorage = AuthStorage.create();
   const modelRegistry = ModelRegistry.create(authStorage);
 
-  return createAgentSession({
+  const customTools = [
+    ...buildMcpUiVizTools({ cwd, logger: (level, message, meta) => onMcpLog?.(level, message, meta) }),
+    ...buildQuestionTools(cwd),
+    ...buildFeedbackTools(cwd),
+    ...buildEvalTools(cwd),
+  ];
+
+  const result = await createAgentSession({
     cwd,
     authStorage,
     modelRegistry,
-    customTools: [...buildMcpUiVizTools({ cwd, logger: (level, message, meta) => onMcpLog?.(level, message, meta) }), ...buildQuestionTools(cwd)],
+    customTools,
     sessionManager: process.env.PI_CHAT_PERSIST === "1"
       ? SessionManager.create(cwd)
       : SessionManager.inMemory(cwd),
   });
+  return { ...result, customToolNames: customTools.map((t) => t.name) };
 }
 
 let connectionSeq = 0;
@@ -170,6 +294,34 @@ wss.on("connection", async (ws) => {
   let sessionResult: Awaited<ReturnType<typeof createSession>> | undefined;
   let unsubscribe: (() => void) | undefined;
   let cwd = process.env.PI_CHAT_CWD || process.cwd();
+  // The skill (and exact version) most recently launched on this connection —
+  // stamped onto feedback so improvement data attributes to skill versions.
+  let activeSkill: { id: string; name?: string; version?: string } | undefined;
+
+  const sendEvalState = () => {
+    const analytics = evalAnalytics(cwd);
+    send(ws, {
+      type: "eval_state",
+      sets: listEvalSets(cwd),
+      runs: listEvalRuns(cwd).map((r) => ({ ...r, summary: runSummary(r) })),
+      trends: analytics.trends,
+      comparisons: analytics.comparisons,
+    });
+  };
+
+  const sendSkills = () => send(ws, { type: "skills", skills: listSkills(cwd), health: buildSkillHealth(cwd) });
+
+  const sendFeedbackState = () => {
+    const analytics = feedbackAnalytics(cwd);
+    send(ws, {
+      type: "feedback_state",
+      summary: analytics.summary,
+      byTargetType: analytics.byTargetType,
+      bySkill: analytics.bySkill,
+      openQueue: analytics.openQueue.slice(0, 200),
+      records: listFeedback(cwd).slice(-200),
+    });
+  };
 
   async function closeSession() {
     log("debug", "session", "Closing session", { connectionId, cwd });
@@ -181,6 +333,7 @@ wss.on("connection", async (ws) => {
 
   async function startSession() {
     await closeSession();
+    activeSkill = undefined;
     sendLog(ws, "info", "session", "Starting Pi session", { connectionId, cwd });
     send(ws, { type: "status", status: "starting" });
     sessionResult = await createSession(cwd, (level, message, meta) => sendLog(ws, level, "mcp-ui", message, { connectionId, ...(meta || {}) }));
@@ -199,10 +352,14 @@ wss.on("connection", async (ws) => {
         case "agent_start":
           send(ws, { type: "status", status: "running" });
           break;
-        case "agent_end":
+        case "agent_end": {
           send(ws, { type: "status", status: "idle" });
           send(ws, { type: "messages", messages: session.messages });
+          // Real token usage from the SDK (last assistant message of the turn).
+          const lastAssistant: any = [...session.messages].reverse().find((m: any) => m?.role === "assistant" && m?.usage);
+          if (lastAssistant?.usage) send(ws, { type: "usage", usage: lastAssistant.usage });
           break;
+        }
         case "tool_execution_start":
           sendLog(ws, "info", "tool", `Started ${event.toolName}`, { connectionId, toolCallId: event.toolCallId, args: event.args });
           send(ws, { type: "tool_start", toolCallId: event.toolCallId, toolName: event.toolName, args: event.args });
@@ -226,7 +383,28 @@ wss.on("connection", async (ws) => {
           }
           if (details?.questionMarked) {
             send(ws, { type: "question_marked", ...details.questionMarked });
+            // A mark on an eval-run question syncs into the run's results.
+            const evRef = parseEvalQuestionId(details.questionMarked.questionId || "");
+            if (evRef) {
+              try {
+                const mark = details.questionMarked.mark || {};
+                recordEvalResult(cwd, evRef.runId, {
+                  caseId: evRef.caseId,
+                  score: typeof mark.score === "number" ? mark.score : mark.correct === true ? 1 : mark.correct === false ? 0 : undefined,
+                  pass: typeof mark.correct === "boolean" ? mark.correct : undefined,
+                  reasoning: mark.feedback ? String(mark.feedback) : undefined,
+                  gradedBy: "llm",
+                });
+                sendEvalState();
+              } catch (error) {
+                log("warn", "evals", "Eval sync from mark failed", { error: getErrorMessage(error) });
+              }
+            }
           }
+          if (details?.evalRun) {
+            send(ws, { type: "eval_run_update", run: details.evalRun, summary: runSummary(details.evalRun) });
+          }
+          if (details?.evalSet) sendEvalState();
           break;
         }
         case "queue_update":
@@ -240,6 +418,12 @@ wss.on("connection", async (ws) => {
     });
 
     sendLog(ws, "info", "session", "Pi session ready", { connectionId, sessionId: session.sessionId, model: session.model, thinkingLevel: session.thinkingLevel, cwd });
+    // Tool names for the telemetry panel: prefer the session's full tool list
+    // when the SDK exposes one, else the custom tools this harness registered.
+    const sessionTools = (session as any).tools;
+    const toolNames: string[] = Array.isArray(sessionTools)
+      ? sessionTools.map((t: any) => t?.name ?? t?.definition?.name).filter(Boolean)
+      : sessionResult!.customToolNames;
     send(ws, {
       type: "ready",
       sessionId: session.sessionId,
@@ -249,7 +433,14 @@ wss.on("connection", async (ws) => {
       modelFallbackMessage,
       messages: session.messages,
       cwd,
+      tools: toolNames,
+      customTools: sessionResult!.customToolNames,
     });
+    // Push discovery-backed state so the sidebar is populated without a round-trip.
+    try { sendSkills(); } catch (error) { log("warn", "skills", "Skill discovery failed", { error: getErrorMessage(error) }); }
+    try { sendEvalState(); } catch (error) { log("warn", "evals", "Eval state failed", { error: getErrorMessage(error) }); }
+    try { sendFeedbackState(); } catch (error) { log("warn", "feedback", "Feedback state failed", { error: getErrorMessage(error) }); }
+    try { send(ws, { type: "config", config: readHarnessConfig(cwd) }); } catch (error) { log("warn", "config", "Config read failed", { error: getErrorMessage(error) }); }
   }
 
   try {
@@ -332,6 +523,184 @@ wss.on("connection", async (ws) => {
       return;
     }
 
+    // Workspace harness config (system prompt + hooks) — deterministic saves.
+    if (message.type === "get_config") {
+      send(ws, { type: "config", config: readHarnessConfig(cwd) });
+      return;
+    }
+    if (message.type === "set_config") {
+      try {
+        const config = writeHarnessConfig(cwd, message.config || {});
+        sendLog(ws, "info", "config", "Harness config saved", { connectionId, systemPromptChars: (config.systemPrompt || "").length, hooks: (config.hooks || []).length });
+        send(ws, { type: "config", config });
+      } catch (error) {
+        sendLog(ws, "error", "config", "Save config failed", { connectionId, error: getErrorMessage(error) });
+        send(ws, { type: "error", error: `Save config: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+
+    // Skills: deterministic filesystem discovery — no session/tokens needed.
+    if (message.type === "list_skills") {
+      try {
+        sendSkills();
+      } catch (error) {
+        sendLog(ws, "error", "skills", "Skill discovery failed", { connectionId, error: getErrorMessage(error) });
+        send(ws, { type: "error", error: `Skills: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+
+    // Skill version history + snapshot content (for the diff view).
+    if (message.type === "skill_versions") {
+      try {
+        send(ws, { type: "skill_versions", skillId: String(message.skillId || ""), versions: listSkillVersions(cwd, String(message.skillId || "")) });
+      } catch (error) {
+        send(ws, { type: "error", error: `Skill versions: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+    if (message.type === "skill_version_content") {
+      try {
+        const skillId = String(message.skillId || "");
+        const hash = String(message.hash || "");
+        send(ws, { type: "skill_version_content", skillId, hash, content: getSkillVersionContent(cwd, skillId, hash) ?? null });
+      } catch (error) {
+        send(ws, { type: "error", error: `Skill version content: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+
+    // Human feedback: SAVE deterministically (the dataset for recursive
+    // improvement) and acknowledge. The model reads it later via list_feedback.
+    if (message.type === "feedback") {
+      try {
+        // Server-side skill attribution: inherit the active skill unless the
+        // client explicitly attributed the record itself.
+        const raw = (message.record || {}) as Record<string, unknown>;
+        if (activeSkill && !raw.skillId) {
+          raw.skillId = activeSkill.id;
+          raw.skillVersion = activeSkill.version;
+        }
+        const record = saveFeedback(cwd, raw);
+        sendLog(ws, "info", "feedback", "Feedback saved", { connectionId, feedbackId: record.feedbackId, targetType: record.targetType, rating: record.rating, skillId: record.skillId });
+        send(ws, { type: "feedback_saved", record, summary: feedbackSummary(cwd) });
+        sendFeedbackState();
+      } catch (error) {
+        sendLog(ws, "error", "feedback", "Save feedback failed", { connectionId, error: getErrorMessage(error) });
+        send(ws, { type: "error", error: `Save feedback: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+    if (message.type === "feedback_state") {
+      sendFeedbackState();
+      return;
+    }
+    if (message.type === "feedback_resolve") {
+      try {
+        const record = resolveFeedback(cwd, String(message.feedbackId || ""), message.status === "open" ? "open" : "addressed");
+        sendLog(ws, "info", "feedback", "Feedback status changed", { connectionId, feedbackId: record.feedbackId, status: record.status });
+        sendFeedbackState();
+        sendSkills(); // open-corrections counts feed skill health
+      } catch (error) {
+        send(ws, { type: "error", error: `Feedback status: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+
+    // Evals: sets/runs state, set management, and starting runs.
+    if (message.type === "eval_state") {
+      sendEvalState();
+      return;
+    }
+    if (message.type === "eval_save_set") {
+      try {
+        const set = saveEvalSet(cwd, {
+          id: message.set?.id,
+          name: String(message.set?.name || ""),
+          description: message.set?.description,
+          kind: message.set?.kind === "prompts" ? "prompts" : "questions",
+          cases: message.set?.cases || [],
+          skillId: message.set?.skillId,
+        });
+        sendLog(ws, "info", "evals", "Eval set saved", { connectionId, setId: set.id, name: set.name, cases: set.cases.length });
+        sendEvalState();
+      } catch (error) {
+        sendLog(ws, "error", "evals", "Save eval set failed", { connectionId, error: getErrorMessage(error) });
+        send(ws, { type: "error", error: `Save eval set: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+    if (message.type === "eval_delete_set") {
+      deleteEvalSet(cwd, String(message.setId || ""));
+      sendEvalState();
+      return;
+    }
+    if (message.type === "eval_set_baseline") {
+      try {
+        const run = setBaselineRun(cwd, String(message.runId || ""));
+        sendLog(ws, "info", "evals", "Baseline pinned", { connectionId, runId: run.runId, setId: run.setId });
+        sendEvalState();
+      } catch (error) {
+        send(ws, { type: "error", error: `Set baseline: ${getErrorMessage(error)}` });
+      }
+      return;
+    }
+    if (message.type === "eval_run") {
+      try {
+        const set = getEvalSet(cwd, String(message.setId || ""));
+        if (!set) throw new Error("Unknown eval set");
+        // Bind the run to the tested skill's CURRENT version and snapshot the
+        // harness config, so "did my edit help?" is answerable later.
+        const boundSkill = set.skillId ? listSkills(cwd).find((s) => s.id === set.skillId) : undefined;
+        const sessionModel = sessionResult?.session?.model as { id?: string; name?: string } | string | undefined;
+        const modelId = sessionModel
+          ? typeof sessionModel === "string" ? sessionModel : String(sessionModel.id ?? sessionModel.name ?? "")
+          : undefined;
+        const run = createEvalRun(cwd, set, {
+          skillId: set.skillId,
+          skillVersion: boundSkill?.version,
+          configSnapshot: configSnapshotFor(cwd, modelId || undefined),
+        });
+        sendLog(ws, "info", "evals", "Eval run started", { connectionId, runId: run.runId, setId: set.id, kind: set.kind, cases: set.cases.length, skillId: run.skillId, skillVersion: run.skillVersion });
+        send(ws, { type: "eval_run_started", run, summary: runSummary(run) });
+        sendEvalState();
+        if (set.kind === "questions") {
+          // Human-answered run: pose every question through the standard
+          // question modal; answers/marks sync back into the run.
+          for (const c of set.cases as EvalQuestionCase[]) {
+            const { pub } = registerQuestion(cwd, {
+              id: evalQuestionId(run.runId, c.id),
+              type: c.type,
+              question: c.question,
+              choices: c.choices,
+              correct: c.correct,
+              expected: c.expected,
+              points: c.points,
+            });
+            send(ws, { type: "question", question: pub });
+          }
+        } else {
+          // Model-graded run: one framing prompt drives answer + strict
+          // self-grade + deterministic record_eval_result per case.
+          const session = sessionResult?.session;
+          if (!session) throw new Error("Session is not ready");
+          send(ws, { type: "assistant_start" });
+          const framing = promptRunFraming(run, set);
+          send(ws, { type: "prompt_payload", label: `Eval run — ${set.name}`, composed: framing });
+          await session.prompt(framing, {
+            streamingBehavior: session.isStreaming ? "followUp" : undefined,
+            source: "api" as any,
+          });
+        }
+      } catch (error) {
+        sendLog(ws, "error", "evals", "Eval run failed", { connectionId, error: getErrorMessage(error) });
+        send(ws, { type: "error", error: `Eval run: ${getErrorMessage(error)}` });
+        send(ws, { type: "status", status: "idle" });
+      }
+      return;
+    }
+
     // Assessment answers: SAVE deterministically first (every answer is kept,
     // regardless of the model), then hand the full batch to the LLM to mark.
     if (message.type === "answer" || message.type === "answer_batch") {
@@ -349,6 +718,26 @@ wss.on("connection", async (ws) => {
       sendLog(ws, "info", "assessment", "Answers saved", { connectionId, count: records.length, questionIds: records.map((r) => r.questionId) });
       for (const rec of records) send(ws, { type: "answer_saved", record: rec });
       send(ws, { type: "answers_saved", records });
+      // Answers to eval-run questions sync into the run (MCQ auto-mark grades
+      // immediately; short answers record now and pick up the LLM mark later).
+      let evalTouched = false;
+      for (const rec of records) {
+        const evRef = parseEvalQuestionId(rec.questionId);
+        if (!evRef) continue;
+        try {
+          recordEvalResult(cwd, evRef.runId, {
+            caseId: evRef.caseId,
+            answer: rec.answerText,
+            score: rec.autoMark ? (rec.autoMark.correct ? 1 : 0) : undefined,
+            pass: rec.autoMark ? rec.autoMark.correct : undefined,
+            gradedBy: rec.autoMark ? "auto" : "human",
+          });
+          evalTouched = true;
+        } catch (error) {
+          sendLog(ws, "warn", "evals", "Eval sync from answer failed", { connectionId, error: getErrorMessage(error) });
+        }
+      }
+      if (evalTouched) sendEvalState();
       const session = sessionResult?.session;
       if (session) {
         try {
@@ -364,6 +753,7 @@ wss.on("connection", async (ws) => {
             `[Assessment] The user submitted ${records.length} answer${records.length === 1 ? "" : "s"}.\n\n` +
             body +
             `\nMark every submitted answer first. Call mark_answer once for each questionId before giving any user-facing feedback. After all mark_answer calls are complete, provide one combined feedback/score summary. The raw answers are already saved.`;
+          send(ws, { type: "prompt_payload", label: "Assessment marking", composed: framing });
           await session.prompt(framing, {
             streamingBehavior: session.isStreaming ? "followUp" : undefined,
             source: "api" as any,
@@ -387,7 +777,18 @@ wss.on("connection", async (ws) => {
       if (message.type === "prompt") {
         const text = message.message.trim();
         if (!text) return;
-        sendLog(ws, "info", "prompt", "User prompt received", { connectionId, chars: text.length, attachments: message.attachments?.length || 0, streamingBehavior: message.streamingBehavior });
+        // Skill launch attribution: remember the active skill for this
+        // connection and record the launch deterministically.
+        if (message.skill?.id) {
+          activeSkill = { id: String(message.skill.id), name: message.skill.name, version: message.skill.version };
+          try {
+            recordSkillLaunch(cwd, activeSkill.id, activeSkill.version);
+            sendSkills();
+          } catch (error) {
+            log("warn", "skills", "Record skill launch failed", { error: getErrorMessage(error) });
+          }
+        }
+        sendLog(ws, "info", "prompt", "User prompt received", { connectionId, chars: text.length, attachments: message.attachments?.length || 0, streamingBehavior: message.streamingBehavior, skillId: message.skill?.id });
         send(ws, { type: "user", text }); // echo only the typed text, not attachment bodies
         send(ws, { type: "assistant_start" });
         const attachments = message.attachments ?? [];
@@ -424,7 +825,18 @@ wss.on("connection", async (ws) => {
           ? message.approvalPolicy.trim()
           : "[Process AI Harness command approval mode: Smart approvals]\nAuto-run safe read-only inspection. Use ask_question for destructive, costly, privacy-sensitive, network, install, write, or ambiguous commands.";
         const userAndAttachments = attached ? `${attached}\n\n${text}` : text;
-        const composed = `${approvalPolicy}\n\n${userAndAttachments}`;
+        const systemPrompt = typeof message.systemPrompt === "string" && message.systemPrompt.trim()
+          ? `[Harness system prompt — set by the user; follow it for this whole conversation]\n${message.systemPrompt.trim().slice(0, 8000)}`
+          : "";
+        const hooksBefore = typeof message.hooksBefore === "string" && message.hooksBefore.trim()
+          ? `[Harness hooks — applied before every message]\n${message.hooksBefore.trim().slice(0, 4000)}`
+          : "";
+        const hooksAfter = typeof message.hooksAfter === "string" && message.hooksAfter.trim()
+          ? `[Harness hooks — applied after every message]\n${message.hooksAfter.trim().slice(0, 4000)}`
+          : "";
+        const composed = [systemPrompt, hooksBefore, approvalPolicy, userAndAttachments, hooksAfter].filter(Boolean).join("\n\n");
+        // Telemetry: the exact payload handed to the model, verbatim.
+        send(ws, { type: "prompt_payload", label: "User turn", composed });
         await session!.prompt(composed, {
           streamingBehavior: session!.isStreaming ? (message.streamingBehavior || "followUp") : undefined,
           source: "api" as any,

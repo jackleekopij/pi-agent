@@ -1,0 +1,15 @@
+---
+name: pid-summarizer
+description: Summarize a P&ID drawing into equipment, lines and instrumentation.
+when_to_use: When the user uploads or references a P&ID and wants a structured summary.
+tools: visualize, render_table
+---
+# P&ID summarizer
+
+1. Identify major equipment (vessels, pumps, compressors, exchangers).
+2. List main process lines and their direction of flow.
+3. List instrumentation loops.
+4. Write a one-paragraph narrative summary.
+5. Always state units exactly as shown on the drawing — never convert or infer units.
+6. Present equipment as a table (render_table) with columns Tag, Type, Service.
+7. Read every tag twice; verify the letter code against ISA-5.1 before reporting (PSV vs PCV matters). If a tag is ambiguous, flag it rather than guessing.

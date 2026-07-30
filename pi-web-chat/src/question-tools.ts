@@ -93,6 +93,33 @@ export function getQuestion(cwd: string, id: string): StoredQuestion | undefined
   return readJson<Record<string, StoredQuestion>>(qFile(cwd), {})[id];
 }
 
+/** Store a question directly (used by ask_question AND server-driven flows like
+ *  eval runs) and return both the stored and browser-safe shapes. */
+export function registerQuestion(cwd: string, input: {
+  id?: string; type: string; question: string; choices?: string[]; correct?: string; expected?: string; points?: number;
+}): { stored: StoredQuestion; pub: PublicQuestion } {
+  const type: QuestionType = String(input.type).toLowerCase().startsWith("multi") ? "multiple_choice" : "short_answer";
+  const id = (input.id && String(input.id)) || uid("q");
+  let choices: QuestionChoice[] | undefined;
+  let correctIds: string[] | undefined;
+  if (type === "multiple_choice") {
+    choices = (input.choices ?? []).map((c, i) => ({ id: String.fromCharCode(65 + i), text: String(c) }));
+    correctIds = resolveCorrect(input.correct, choices);
+  }
+  const q: StoredQuestion = {
+    id, type, question: String(input.question), choices, correctIds,
+    expected: input.expected ? String(input.expected) : undefined,
+    points: typeof input.points === "number" ? input.points : undefined,
+    createdAt: new Date().toISOString(),
+  };
+  const store = readJson<Record<string, StoredQuestion>>(qFile(cwd), {});
+  store[id] = q;
+  writeJson(qFile(cwd), store);
+  appendLog(cwd, { event: "question", id, type, question: q.question });
+  const pub: PublicQuestion = { id, type, question: q.question, choices, points: q.points };
+  return { stored: q, pub };
+}
+
 /** Deterministic save of one submission. Auto-marks MCQ when the correct answer
  *  is known. Always appends — every answer is kept. */
 export function saveAnswer(cwd: string, input: { questionId: string; value: string | string[]; text?: string }): AnswerRecord {
@@ -168,26 +195,16 @@ export function buildQuestionTools(cwd: string): ToolDefinition[] {
         points: Type.Optional(Type.Number({ description: "Points the question is worth." })),
       }),
       async execute(_id, params) {
-        const type: QuestionType = String(params.type).toLowerCase().startsWith("multi") ? "multiple_choice" : "short_answer";
-        const id = (params.id && String(params.id)) || uid("q");
-        let choices: QuestionChoice[] | undefined;
-        let correctIds: string[] | undefined;
-        if (type === "multiple_choice") {
-          choices = (params.choices ?? []).map((c, i) => ({ id: String.fromCharCode(65 + i), text: String(c) }));
-          correctIds = resolveCorrect(params.correct, choices);
-        }
-        const q: StoredQuestion = {
-          id, type, question: String(params.question), choices, correctIds,
+        const { stored, pub } = registerQuestion(cwd, {
+          id: params.id ? String(params.id) : undefined,
+          type: String(params.type),
+          question: String(params.question),
+          choices: params.choices?.map(String),
+          correct: params.correct ? String(params.correct) : undefined,
           expected: params.expected ? String(params.expected) : undefined,
           points: typeof params.points === "number" ? params.points : undefined,
-          createdAt: new Date().toISOString(),
-        };
-        const store = readJson<Record<string, StoredQuestion>>(qFile(cwd), {});
-        store[id] = q;
-        writeJson(qFile(cwd), store);
-        appendLog(cwd, { event: "question", id, type, question: q.question });
-
-        const pub: PublicQuestion = { id, type, question: q.question, choices, points: q.points };
+        });
+        const { id, type } = stored;
         const summary =
           `Rendered a ${type === "multiple_choice" ? "multiple-choice" : "short-answer"} question [${id}] in the chat. ` +
           `The user will answer in the component; their answer is saved automatically and sent back to you to mark — ` +

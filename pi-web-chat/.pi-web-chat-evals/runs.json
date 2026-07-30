@@ -1,0 +1,306 @@
+{
+  "run-ms83y9tq-qv8": {
+    "runId": "run-ms83y9tq-qv8",
+    "setId": "set-ms83y9tp-4ai",
+    "setName": "P&ID summarizer suite",
+    "kind": "prompts",
+    "total": 5,
+    "status": "complete",
+    "results": [
+      {
+        "caseId": "c1",
+        "answer": "V-120 separator, P-121A/B pumps, E-122 cooler.",
+        "score": 0.8,
+        "pass": true,
+        "reasoning": "All equipment identified.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-17T08:21:22.830Z"
+      },
+      {
+        "caseId": "c2",
+        "answer": "Inlet ~0.45 t/h to V-120…",
+        "score": 0.2,
+        "pass": false,
+        "reasoning": "Converted kg/h to t/h — units must match the drawing.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-17T08:21:22.830Z"
+      },
+      {
+        "caseId": "c3",
+        "answer": "Prose list of equipment.",
+        "score": 0.3,
+        "pass": false,
+        "reasoning": "Not rendered as a table.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-17T08:21:22.830Z"
+      },
+      {
+        "caseId": "c4",
+        "answer": "LIC-1201 and PIC-1202.",
+        "score": 0.7,
+        "pass": true,
+        "reasoning": "Both loops found.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-17T08:21:22.830Z"
+      },
+      {
+        "caseId": "c5",
+        "answer": "PCV-101 protects the vessel.",
+        "score": 0.1,
+        "pass": false,
+        "reasoning": "Misread PSV-101 as PCV-101.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-17T08:21:22.830Z"
+      }
+    ],
+    "startedAt": "2026-07-17T07:51:22.830Z",
+    "skillId": "pid-summarizer",
+    "skillVersion": "6a9200f9",
+    "configSnapshot": {
+      "model": "pi-default",
+      "systemPromptHash": "a41f09c2",
+      "systemPromptChars": 412,
+      "hooks": 1
+    },
+    "trials": 1,
+    "completedAt": "2026-07-17T08:21:22.830Z",
+    "baseline": true
+  },
+  "run-ms83y9tu-vrj": {
+    "runId": "run-ms83y9tu-vrj",
+    "setId": "set-ms83y9tp-4ai",
+    "setName": "P&ID summarizer suite",
+    "kind": "prompts",
+    "total": 5,
+    "status": "complete",
+    "results": [
+      {
+        "caseId": "c1",
+        "answer": "V-120, P-121A/B; missed E-122.",
+        "score": 0.4,
+        "pass": false,
+        "reasoning": "Cooler E-122 omitted this run.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-22T08:21:22.830Z"
+      },
+      {
+        "caseId": "c2",
+        "answer": "Inlet 12\" 450 kg/h to V-120; liquid 6\" to P-121; gas 8\" to E-122.",
+        "score": 0.9,
+        "pass": true,
+        "reasoning": "Units exactly as drawn.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-22T08:21:22.830Z"
+      },
+      {
+        "caseId": "c3",
+        "answer": "render_table with Tag/Type/Service.",
+        "score": 0.8,
+        "pass": true,
+        "reasoning": "Rendered as table.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-22T08:21:22.830Z"
+      },
+      {
+        "caseId": "c4",
+        "answer": "LIC-1201, PIC-1202.",
+        "score": 0.75,
+        "pass": true,
+        "reasoning": "Both loops.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-22T08:21:22.830Z"
+      },
+      {
+        "caseId": "c5",
+        "answer": "PCV-101, set 18 barg.",
+        "score": 0.3,
+        "pass": false,
+        "reasoning": "Tag still misread (PCV vs PSV).",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-22T08:21:22.830Z"
+      }
+    ],
+    "startedAt": "2026-07-22T07:51:22.830Z",
+    "skillId": "pid-summarizer",
+    "skillVersion": "1c3c2a5e",
+    "configSnapshot": {
+      "model": "pi-default",
+      "systemPromptHash": "a41f09c2",
+      "systemPromptChars": 412,
+      "hooks": 1
+    },
+    "trials": 1,
+    "completedAt": "2026-07-22T08:21:22.830Z"
+  },
+  "run-ms83y9tv-hdc": {
+    "runId": "run-ms83y9tv-hdc",
+    "setId": "set-ms83y9tp-4ai",
+    "setName": "P&ID summarizer suite",
+    "kind": "prompts",
+    "total": 5,
+    "status": "complete",
+    "results": [
+      {
+        "caseId": "c1",
+        "answer": "V-120, P-121A/B; E-122 missed again.",
+        "score": 0.45,
+        "pass": false,
+        "reasoning": "Cooler consistently missed — needs a rule.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-25T08:21:22.830Z"
+      },
+      {
+        "caseId": "c2",
+        "answer": "450 kg/h etc.",
+        "score": 0.85,
+        "pass": true,
+        "reasoning": "Units correct.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-25T08:21:22.830Z"
+      },
+      {
+        "caseId": "c3",
+        "answer": "Table rendered.",
+        "score": 0.8,
+        "pass": true,
+        "reasoning": "OK.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-25T08:21:22.830Z"
+      },
+      {
+        "caseId": "c4",
+        "answer": "Both loops + alarm functions.",
+        "score": 0.8,
+        "pass": true,
+        "reasoning": "OK.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-25T08:21:22.830Z"
+      },
+      {
+        "caseId": "c5",
+        "answer": "PSV-101 at 18 barg — verified against ISA letter codes.",
+        "score": 0.6,
+        "pass": true,
+        "reasoning": "Correct this run, but confidence low.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-25T08:21:22.830Z"
+      }
+    ],
+    "startedAt": "2026-07-25T07:51:22.830Z",
+    "skillId": "pid-summarizer",
+    "skillVersion": "1c3c2a5e",
+    "configSnapshot": {
+      "model": "pi-default",
+      "systemPromptHash": "a41f09c2",
+      "systemPromptChars": 412,
+      "hooks": 1
+    },
+    "trials": 1,
+    "completedAt": "2026-07-25T08:21:22.830Z"
+  },
+  "run-ms83y9tx-et4": {
+    "runId": "run-ms83y9tx-et4",
+    "setId": "set-ms83y9tp-4ai",
+    "setName": "P&ID summarizer suite",
+    "kind": "prompts",
+    "total": 5,
+    "status": "complete",
+    "results": [
+      {
+        "caseId": "c1",
+        "answer": "V-120, P-121A/B, E-122 — full sweep.",
+        "score": 0.9,
+        "pass": true,
+        "reasoning": "All equipment, two-pass read.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-29T08:21:22.830Z"
+      },
+      {
+        "caseId": "c2",
+        "answer": "450 kg/h, exact units.",
+        "score": 0.95,
+        "pass": true,
+        "reasoning": "Exact units.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-29T08:21:22.830Z"
+      },
+      {
+        "caseId": "c3",
+        "answer": "Table rendered.",
+        "score": 0.85,
+        "pass": true,
+        "reasoning": "OK.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-29T08:21:22.830Z"
+      },
+      {
+        "caseId": "c4",
+        "answer": "Both loops.",
+        "score": 0.8,
+        "pass": true,
+        "reasoning": "OK.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-29T08:21:22.830Z"
+      },
+      {
+        "caseId": "c5",
+        "answer": "PSV-101, 18 barg (tag verified twice).",
+        "score": 0.7,
+        "pass": true,
+        "reasoning": "Tag verification rule applied.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-29T08:21:22.830Z"
+      }
+    ],
+    "startedAt": "2026-07-29T07:51:22.830Z",
+    "skillId": "pid-summarizer",
+    "skillVersion": "29c9ecef",
+    "configSnapshot": {
+      "model": "pi-default",
+      "systemPromptHash": "a41f09c2",
+      "systemPromptChars": 412,
+      "hooks": 2
+    },
+    "trials": 1,
+    "completedAt": "2026-07-29T08:21:22.830Z"
+  },
+  "run-ms83y9tz-t0p": {
+    "runId": "run-ms83y9tz-t0p",
+    "setId": "set-ms83y9tz-rxu",
+    "setName": "Process fundamentals check",
+    "kind": "questions",
+    "total": 3,
+    "status": "complete",
+    "results": [
+      {
+        "caseId": "q1",
+        "answer": "Separator",
+        "score": 1,
+        "pass": true,
+        "gradedBy": "auto",
+        "recordedAt": "2026-07-20T08:21:22.830Z"
+      },
+      {
+        "caseId": "q2",
+        "answer": "High temperature",
+        "score": 0,
+        "pass": false,
+        "gradedBy": "auto",
+        "recordedAt": "2026-07-20T08:21:22.830Z"
+      },
+      {
+        "caseId": "q3",
+        "answer": "It combines several well streams into one header.",
+        "score": 1,
+        "pass": true,
+        "reasoning": "Matches expected meaning.",
+        "gradedBy": "llm",
+        "recordedAt": "2026-07-20T08:21:22.830Z"
+      }
+    ],
+    "startedAt": "2026-07-20T07:51:22.830Z",
+    "skillId": "assessment",
+    "trials": 1,
+    "completedAt": "2026-07-20T08:21:22.830Z"
+  }
+}

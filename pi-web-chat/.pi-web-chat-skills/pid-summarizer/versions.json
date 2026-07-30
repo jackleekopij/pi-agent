@@ -1,0 +1,40 @@
+[
+  {
+    "hash": "6a9200f9",
+    "revision": 1,
+    "savedAt": "2026-07-16T08:51:22.830Z",
+    "source": "workspace",
+    "path": "/home/claude/work/demo-cwd/skills/pid-summarizer/SKILL.md",
+    "status": "live"
+  },
+  {
+    "hash": "1c3c2a5e",
+    "revision": 2,
+    "savedAt": "2026-07-21T08:51:22.830Z",
+    "source": "workspace",
+    "path": "/home/claude/work/demo-cwd/skills/pid-summarizer/SKILL.md",
+    "status": "live",
+    "note": "Added exact-units + equipment-table rules after unit-conversion corrections",
+    "evidence": {
+      "feedbackIds": [
+        "fb-ms83y9ts-8wxy2",
+        "fb-ms83y9ts-u1ku1"
+      ]
+    }
+  },
+  {
+    "hash": "29c9ecef",
+    "revision": 3,
+    "savedAt": "2026-07-28T08:51:22.830Z",
+    "source": "workspace",
+    "path": "/home/claude/work/demo-cwd/skills/pid-summarizer/SKILL.md",
+    "status": "live",
+    "note": "Two-pass tag verification (ISA-5.1) after PSV/PCV misread persisted across runs",
+    "evidence": {
+      "feedbackIds": [
+        "fb-ms83y9tw-hvcad"
+      ],
+      "evalRunId": "run-ms83y9tv-hdc"
+    }
+  }
+]

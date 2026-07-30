@@ -1,0 +1,87 @@
+{
+  "set-ms83y9tp-4ai": {
+    "id": "set-ms83y9tp-4ai",
+    "name": "P&ID summarizer suite",
+    "description": "Regression suite for the pid-summarizer skill — equipment, units, tags.",
+    "kind": "prompts",
+    "cases": [
+      {
+        "id": "c1",
+        "prompt": "Summarize the major equipment on drawing D-1201.",
+        "expected": "Two-phase separator V-120, export pump P-121A/B, gas cooler E-122.",
+        "rubric": "Pass if all three equipment items are identified with correct tags."
+      },
+      {
+        "id": "c2",
+        "prompt": "List the process lines on D-1201 with flow direction and units.",
+        "expected": "Inlet 12\" 450 kg/h to V-120; liquid out 6\" to P-121; gas out 8\" to E-122.",
+        "rubric": "Pass only if units are stated exactly as drawn (kg/h, not converted)."
+      },
+      {
+        "id": "c3",
+        "prompt": "Produce the equipment table for D-1201.",
+        "expected": "Table with columns Tag, Type, Service.",
+        "rubric": "Pass if rendered as a table, not prose."
+      },
+      {
+        "id": "c4",
+        "prompt": "Identify the instrumentation loops on D-1201.",
+        "expected": "LIC-1201 level loop on V-120, PIC-1202 pressure loop on gas outlet.",
+        "rubric": "Pass if both loops are identified."
+      },
+      {
+        "id": "c5",
+        "prompt": "What relief devices protect V-120?",
+        "expected": "PSV-101 on the vessel top, set at 18 barg.",
+        "rubric": "Pass only if PSV-101 is read correctly (not PCV-101) with set pressure."
+      }
+    ],
+    "skillId": "pid-summarizer",
+    "createdAt": "2026-07-17T08:51:22.830Z",
+    "updatedAt": "2026-07-17T08:51:22.830Z"
+  },
+  "set-ms83y9tz-rxu": {
+    "id": "set-ms83y9tz-rxu",
+    "name": "Process fundamentals check",
+    "description": "Quick human knowledge check used to calibrate onboarding material.",
+    "kind": "questions",
+    "cases": [
+      {
+        "id": "q1",
+        "type": "multiple_choice",
+        "question": "Which component separates gas from liquids?",
+        "choices": [
+          "Compressor",
+          "Separator",
+          "Manifold",
+          "Meter"
+        ],
+        "correct": "B",
+        "points": 1
+      },
+      {
+        "id": "q2",
+        "type": "multiple_choice",
+        "question": "What does a PSV protect against?",
+        "choices": [
+          "Low level",
+          "Overpressure",
+          "High temperature",
+          "Cavitation"
+        ],
+        "correct": "B",
+        "points": 1
+      },
+      {
+        "id": "q3",
+        "type": "short_answer",
+        "question": "In one sentence, what does a manifold do?",
+        "expected": "Combines flow from multiple wells into shared piping.",
+        "points": 1
+      }
+    ],
+    "skillId": "assessment",
+    "createdAt": "2026-07-20T08:51:22.830Z",
+    "updatedAt": "2026-07-20T08:51:22.830Z"
+  }
+}

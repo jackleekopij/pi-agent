@@ -38,9 +38,13 @@ The app uses your normal Pi auth at `~/.pi/agent/auth.json` and your default Pi 
   - `revit_api_doc` fetches a specific Revit API doc page by href/URL
   - `revit_api_lookup` searches and reads the top matching pages in one step
 - Streaming assistant responses with **markdown** rendering (code blocks + copy) and a collapsible **thinking** panel
-- **One conversation per browser tab** — opening a new tab starts a fresh chat; reloading a tab resumes it. The left panel lists **every conversation as a single entry** (newest first); click to open one, **New** starts another. Stored in `localStorage`.
+- **One conversation per browser tab** — opening a new tab starts a fresh chat; reloading a tab resumes it. The left panel lists **every conversation as a single entry** (newest first) with per-conversation delete; click to open one, **New chat** starts another. Stored in `localStorage`.
 - **Meaningful-messages view** (ChatGPT/Claude-style): the window shows user/assistant text and visual results; tool calls appear as compact, collapsed chips (full activity stays in the Activity stream panel)
 - **Interactive chart rendering** — every chart/graph/table is returned as a self-contained interactive HTML document in a sandboxed, auto-resizing iframe (hover tooltips + highlight), not a static SVG
+- **Skills panel** — discoverable, one-click launchable skills (see below)
+- **Human-in-the-loop feedback** on every output — rate, comment, correct, annotate (see below)
+- **Evaluation sets** — question banks and model-graded prompt suites with a run dashboard (see below)
+- Inline transcript search (⌘F), command palette (⌘K), status pill, toasts
 - Woodside theme palette: navy `#003369`, grey `#4D4D4F`, red `#D71638`, plus blue ramp `#0071BC` → `#00AEEF`
 - Abort button
 - Uses the Pi SDK directly, no subprocess/RPC bridge
@@ -48,6 +52,67 @@ The app uses your normal Pi auth at `~/.pi/agent/auth.json` and your default Pi 
   - `text/html` / `text/html;profile=mcp-app` renders in a sandboxed iframe
   - `text/uri-list` renders the first HTTP(S) URL in a sandboxed iframe
   - UI actions from components are handled via `postMessage` (`prompt`, `tool`, `intent`, `notify`, `link`); `tool` actions for viz tools render directly
+
+## Skills (discover + launch)
+
+The **Skills** section of the left sidebar lists every available skill and
+launches it with one click (optionally with extra context), or inserts the
+composed prompt into the composer for editing first.
+
+Discovery is deterministic (no model involved) and merges, deduped by id:
+
+1. A **built-in registry** (`src/skills-tools.ts`): Optimal learning,
+   Assessment, Data visualization, Evaluation runner, Feedback review.
+2. **Workspace skills** — `SKILL.md` files under `<cwd>/.pi/skills/<name>/`,
+   `<cwd>/skills/<name>/`, and `<cwd>/docs/SKILL-<name>.md` (repo root is also
+   scanned when the working directory is a package).
+3. **Global skills** — `~/.pi/skills/<name>/SKILL.md`.
+
+`SKILL.md` frontmatter (`name`, `description`, `when_to_use`, `tools`) is
+parsed for the card; drop a new file in any scanned folder and hit ↻ to pick it
+up. File-backed skills launch with an instruction to read and follow the skill
+file, so the full protocol always comes from the file on disk.
+
+## Human-in-the-loop feedback
+
+Every assistant response, chart, table, image and MCP UI card gets a compact
+**feedback bar**:
+
+- **👍 / 👎** — one-click rating
+- **💬** — short comment
+- **✎ Correct** (text/tables) — side-by-side editor storing
+  `{ original, corrected }`; the corrected version is ground truth
+- **⊞ Annotate** (images/drawings) — drag boxes over regions of the image and
+  attach a note to each (normalized `{x, y, w, h, note}`)
+
+Every submission is saved **deterministically server-side** the moment it is
+submitted (never dependent on the model) under `.pi-web-chat-feedback/`
+(`feedback.json` + append-only `events.jsonl`). The model closes the loop via
+the **`list_feedback`** tool — e.g. the built-in *Feedback review* skill loads
+all feedback and proposes prioritized harness/context improvements.
+
+## Evaluation sets
+
+The **Evaluations** sidebar section manages reusable eval suites; storage lives
+under `.pi-web-chat-evals/` (`sets.json`, `runs.json`, `events.jsonl`).
+
+Two kinds of set share one dashboard:
+
+- **Question bank** (`kind: "questions"`) — MCQ / short-answer cases posed to
+  the **human** through the standard question modal. MCQ auto-marks instantly;
+  short answers are marked by the model via `mark_answer`. Marks sync into the
+  run automatically.
+- **Prompt suite** (`kind: "prompts"`) — `{prompt, expected?, rubric?}` cases
+  run against the **model**: one framing prompt drives answer → strict
+  self-grade → deterministic `record_eval_result(runId, caseId, answer, score,
+  pass, reasoning)` per case. The run completes when every case is recorded.
+
+Create sets from the **＋ New set** modal (JSON editor with templates), or ask
+Pi to build one with the **`save_eval_set`** tool ("create an eval set from
+this document"). Click **▶ Run** to start; the run dashboard shows live KPIs
+(recorded, passed, failed, avg score), a per-case score bar, and expandable
+answer/grading detail — plus an "Ask Pi about this run" action that has the
+model diagnose failures via **`list_eval_data`**.
 
 ## Visualizing data (the viz tools)
 

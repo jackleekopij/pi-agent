@@ -84,7 +84,7 @@ body {
   min-width: 0;        /* don't let content widen the grid item past its track */
   overflow: hidden;    /* clip anything that still tries to spill into the chat */
   display: grid;
-  grid-template-rows: 8px auto minmax(140px, 1fr) minmax(120px, .8fr);
+  grid-template-rows: 8px auto auto minmax(0, 1fr);
   border-right: 1px solid var(--border);
   background: #FAFAFA;
 }
